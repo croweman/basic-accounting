@@ -30,6 +30,10 @@
         #bookEntry {
             display: none;
         }
+
+        input[type=file] {
+            display: inline-block;
+        }
     </style>
     <script type="text/JavaScript">
         var state = {
@@ -38,31 +42,7 @@
             bookEntries: []
         };
 
-        // REMOVE THIS
-        state.customers = [
-            {
-                full: 'Mr Lee Crowe8 Ireton WayMarchpe15 9DN',
-                name: 'Mr Lee Crowe',
-                addressLine1: '8 Ireton Way',
-                town: 'March',
-                id: 1
-            },
-            {
-                full: 'Mrs Jayne Crowe8 Ireton WayMarchpe15 9DN',
-                name: 'Mrs Jayne Crowe',
-                addressLine1: '8 Ireton Way',
-                town: 'March',
-                id: 2
-            }
-        ];
-        state.bookEntries = [
-            {
-                customer: '1 - Mr Lee Crowe, 8 Ireton Way, March',
-                when: '2020-10-26T10:16',
-                summary: 'Cut and blow dry',
-                amount: 1.25
-            }
-        ];
+        var localStorage = window.localStorage;
 
         function createCustomer() {
             $('#createCustomerModal').click(function() {
@@ -101,8 +81,10 @@
 
                 state.lastId = state.lastId + 1;
 
+                updateStorage();
+
                 $('#customerDetails').hide();
-                document.documentElement.scrollTop = 0
+                $('#createBookEntryModal')[0].scrollIntoView();
             });
         }
 
@@ -149,9 +131,11 @@
 
                 orderBookEntries();
 
+                updateStorage();
+
                 $('#bookEntry').hide();
 
-                document.documentElement.scrollTop = 0
+                $('#createBookEntryModal')[0].scrollIntoView();
 
                 populateBookEntries();
             });
@@ -164,7 +148,7 @@
             $('#resultsBody').empty();
             $('#results').hide();
             $('#filter').focus();
-            document.documentElement.scrollTop = 0
+            $('#createBookEntryModal')[0].scrollIntoView();
         }
 
         function findCustomer() {
@@ -246,6 +230,7 @@
         function deleteBookEntry(index) {
             deleting = true;
             state.bookEntries.splice(index, 1);
+            updateStorage();
             populateBookEntries();
             deleting = false;
         }
@@ -267,11 +252,55 @@
             $('#total').html(total.toFixed(2));
         }
 
+        function updateStorage() {
+            //localStorage.setItem("BookEntries", JSON.stringify(state));
+        }
+
+        function getFromStorage() {
+            // var storedState = localStorage.getItem("BookEntries");
+
+            // if (storedState !== undefined && storedState !== null) {
+            //     state = JSON.parse(storedState);
+            // } else {
+            //     updateStorage();
+            // }
+        }
+
+        function download() {
+            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            var dlAnchorElem = document.getElementById('downloadAnchorElem');
+            dlAnchorElem.setAttribute("href", dataStr);
+            var name = getFormattedDate(new Date());
+            name = name.replace(' ', '_');
+            name = name.replace(':', '-');
+            name = name.replace(/\//g, '-');
+            dlAnchorElem.setAttribute('download', 'book-entries-' + name + '.json');
+            dlAnchorElem.click();
+        }
+
+        function openFile(event) {
+            var input = event.target;
+
+            var reader = new FileReader();
+            reader.onload = function() {
+                var json = reader.result;
+                state = JSON.parse(json);
+                populateBookEntries();
+            };
+
+            reader.readAsText(input.files[0]);
+        };
+
         function initialise() {
+            getFromStorage();
             createCustomer();
             createBookEntry();
             findCustomer();
             populateBookEntries();
+
+            $('#downloadButton').click(function() {
+                download();
+            });
         }
         
     </script>
@@ -282,11 +311,15 @@
 
         <div class="col-md-12">
             <p>
+                <input type="file" id="import" name="import" class="btn btn-default" accept="application/json" onchange="openFile(event)">
+                <button id="downloadButton" type="button" class="btn btn-default">Download</button>
+                <br /><br />
                 <button id="createBookEntryModal" type="button" class="btn btn-default">Create Book Entry</button>
                 <button id="createCustomerModal" type="button" class="btn btn-default">Create Customer</button>
             </p>
         </div>
-        
+
+        <a id="downloadAnchorElem" style="display:none"></a>
         <div id="customerDetails" class="col-md-12 clear">
             <form autocomplete="off">
                 <div class="panel panel-default">
