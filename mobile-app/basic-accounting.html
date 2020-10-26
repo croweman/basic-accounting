@@ -296,7 +296,7 @@
 
                     html += '<tr><td>' + getFormattedDate(bookEntry.when) + '</td><td>' + bookEntry.customer + '</td><td>£' + bookEntry.amount.toFixed(2) + '</td><td>' + miles + '</td><td>' + bookEntry.summary + '</td><td><button type="button" class="btn btn-default" onclick="deleteBookEntry(' + bookEntry.id  + ')">Delete</button></td></tr>';
                     total += bookEntry.amount;
-                    totalMiles += bookEntry.miles;
+                    totalMiles += miles;
                 });
                 
                 $('#bookEntriesBody').html(html)
