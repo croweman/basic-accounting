@@ -1,7 +1,13 @@
 
-
-local storage? There is a limit on storage
+IMPORT SHOULD RESET THEN IMPORT!!!!!
+and update the indexeddb
+download format may need to be different?
 
 node tool to generate csv or something from json? could have from and to dates or everything
 
+
+
+1. // sorting could probably be done via an index somehow on query for date desc on book entry!!!!!!!!!!
+2. // finding customer may be could be done with an index and contains query?
+3. rather than callbacks could use promises
 
