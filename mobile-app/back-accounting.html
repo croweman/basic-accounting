@@ -243,7 +243,7 @@
             var index = -1;
             state.bookEntries.forEach(function(bookEntry) {
                 index++;
-                html += '<tr><td>' + getFormattedDate(new Date(bookEntry.when)) + '</td><td>' + bookEntry.customer + '</td><td>£' + bookEntry.amount + '</td><td>' + bookEntry.summary + '</td><td><button type="button" class="btn btn-default" onclick="deleteBookEntry(' + index  + ')">Delete</button></td></tr>';
+                html += '<tr><td>' + getFormattedDate(new Date(bookEntry.when)) + '</td><td>' + bookEntry.customer + '</td><td>£' + bookEntry.amount.toFixed(2) + '</td><td>' + bookEntry.summary + '</td><td><button type="button" class="btn btn-default" onclick="deleteBookEntry(' + index  + ')">Delete</button></td></tr>';
                 total += bookEntry.amount;
             });
             
