@@ -578,9 +578,10 @@
     </script>
   </head>
   <body>
-      <div class="col-md-12">
-        <h1>Book Keeping</h1>
-
+      <div class="col-md-12" style="padding-left: 0">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: #292b2c; border-radius: 0">
+            <a class="navbar-brand" href="#" style="color:white">Book Keeping</a>
+        </nav>
         <div class="col-md-12">
             <input type="file" id="import" name="import" class="btn btn-default" accept="application/json" onchange="openFile(event)">
             <button id="downloadButton" type="button" class="btn btn-default">Download</button>
@@ -590,9 +591,9 @@
             Default date:<input id="defaultWhen" type="date" class="form-control inputMargin" required="" placeholder="When">
         </div>
         <div class="col-md-12 clear inputMargin marginBottom">
-            <button id="createBookEntryModal" type="button" class="btn btn-default">Entry +</button>
-            <button id="createCustomerModal" type="button" class="btn btn-default">Customer +</button>
-            <button id="showAllBookEntries" type="button" class="btn btn-default" onclick="javascript:populateBookEntries();">All Entries</button>
+            <button id="createBookEntryModal" type="button" class="btn btn-default btn-primary">Entry +</button>
+            <button id="createCustomerModal" type="button" class="btn btn-default btn-primary">Customer +</button>
+            <button id="showAllBookEntries" type="button" class="btn btn-default btn-primary" onclick="javascript:populateBookEntries();">All Entries</button>
         </div>
         
         <a id="downloadAnchorElem" style="display:none"></a>
