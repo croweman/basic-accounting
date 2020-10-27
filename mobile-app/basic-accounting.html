@@ -37,6 +37,10 @@
         input[type=file] {
             display: inline-block;
         }
+
+        body {
+            margin-bottom: 20px;
+        }
     </style>
     <script type="text/JavaScript">
         var openRequest;
@@ -45,6 +49,9 @@
         var timeOptions = [];
         var bookEntry;
         var allCustomers = [];
+        var monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
 
         function addCustomer(customer, successCallback) {
             var customersTransaction = db.transaction("customer", "readwrite");
@@ -71,9 +78,6 @@
             let request = bookEntryStore.put(bookEntry);
 
             request.onsuccess = successCallback;
-            request.onerror = function(err) {
-                console.log(err);
-            }
         }
 
         function createCustomer() {
@@ -217,7 +221,6 @@
 
         function updateBookEntry() {
             $('#updateBookEntry').click(function() {
-                console.log('1');
                 var customerId = $('#customerId').val().trim();
                 var when = $('#when').val();
                 var whenTime = $('#whenTime').val();
@@ -243,7 +246,6 @@
                 bookEntry.miles = parseFloat(miles);
 
                 updateBookEntryRecord(bookEntry, function() {
-                    console.log('here2');
                     $('#bookEntry').hide();
                     $('#createBookEntryModal')[0].scrollIntoView();
                     populateBookEntries();
@@ -374,6 +376,26 @@
             };
         }
 
+        function getDateLabel(date) {
+            return monthNames[date.getMonth()] + ' ' + date.getFullYear();
+        }
+
+        function toggleTable(tableId) {
+            var visible = $('#' + tableId + ':visible').length > 0;
+            
+            var buttonText = $('#' + tableId + 'Button').text();
+
+            if (visible) {
+                $('#' + tableId).hide();
+                buttonText = buttonText.substr(0, buttonText.length - 1) + '+';
+            } else {
+                $('#' + tableId).show();
+                buttonText = buttonText.substr(0, buttonText.length - 1) + '-';
+            }
+
+            $('#' + tableId + 'Button').text(buttonText);
+        }
+
         function populateBookEntries(providedBookEntries) {
             $('#bookEntry').hide();
             $('#customerDetails').hide();
@@ -389,17 +411,55 @@
             function callback(bookEntries) {
                 var bookEntries = orderBookEntries(bookEntries);
 
+                var data = {};
+                var keys = [];
+
+                // group book entries by month year
                 bookEntries.forEach(function(bookEntry) {
-                    var miles = bookEntry.miles;
+                    var key = getDateLabel(bookEntry.when);
+                    
+                    if (!data[key]) {
+                        data[key] = [];
+                        keys.push(key);
+                    }
 
-                    if (miles === undefined || miles === null)
-                        miles = 0;
-
-                    html += '<tr><td>' + getFormattedDate(bookEntry.when) + '</td><td>' + bookEntry.customer + '</td><td>£' + bookEntry.amount.toFixed(2) + '</td><td>' + miles + '</td><td>' + bookEntry.summary + '</td><td><button type="button" class="btn btn-default" onclick="editBookEntry(' + bookEntry.id  + ', ' + miles + ')">Edit</button></td><td><button type="button" class="btn btn-default" onclick="deleteBookEntry(' + bookEntry.id  + ')">Delete</button></td></tr>';
-                    total += bookEntry.amount;
-                    totalMiles += miles;
+                    data[key].push(bookEntry);
                 });
-                
+
+                var expand = true;
+
+                keys.forEach(function(key) {
+                    var currentTotal = 0;
+                    var currentMiles = 0;
+
+                    data[key].forEach(function(bookEntry) {
+                        var miles = bookEntry.miles;
+
+                        if (miles === undefined || miles === null)
+                            miles = 0;
+
+                        total += bookEntry.amount;
+                        currentTotal += bookEntry.amount;
+                        totalMiles += miles;
+                        currentMiles += miles;
+                    });
+
+                    var tableId = key.replace(' ', '');
+                    var entries = data[key].length;
+                    var buttonAdditionalText = '&nbsp;&nbsp;(' + entries + ' ' + (entries === 1 ? 'entry' : 'entries') + ')';
+
+                    html += '<div class="form-group"><button id="' + tableId + 'Button"class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample" onclick="toggleTable(\'' + tableId + '\')">' + key + ' ' + buttonAdditionalText + ' ' + (expand ? '-' : '+') + '</button></div>';
+                    html += '<div id="' + tableId + '"' + (expand ? '' : ' style="display:none"') + ' class="form-group"><label>Amount: £' + currentTotal.toFixed(2) + '</label><br /><label>Miles: ' + currentMiles.toFixed(2) + '</label>';
+                    html += '<table class="table"><thead><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Miles</th><th>Summary of work</th><th>Edit</th><th>Delete</th></tr></thead><tbody>';
+
+                    data[key].forEach(function(bookEntry) {
+                        html += '<tr><td>' + getFormattedDate(bookEntry.when) + '</td><td>' + bookEntry.customer + '</td><td>£' + bookEntry.amount.toFixed(2) + '</td><td>' + miles + '</td><td>' + bookEntry.summary + '</td><td><button type="button" class="btn btn-default" onclick="editBookEntry(' + bookEntry.id  + ', ' + miles + ')">Edit</button></td><td><button type="button" class="btn btn-default" onclick="deleteBookEntry(' + bookEntry.id  + ')">Delete</button></td></tr>';
+                    });
+
+                    html += '</tbody></table></div>';
+                    expand = false;
+                });
+
                 $('#bookEntriesBody').html(html)
                 $('#bookEntries').show();
                 $('#total').html(total.toFixed(2));
@@ -686,24 +746,10 @@
 
         <div id="bookEntries" class="col-md-12 clear">
             <div id="bookEntriesSummary">
-                <h3 style="padding-top: 5px">Total Amount: £<span id="total"></span></h3>
-                <h3>Total Miles: <span id="totalMiles"></span></h3>
+                <h4 style="padding-top: 5px">Total Amount: £<span id="total"></span></h4>
+                <h4>Total Miles: <span id="totalMiles"></span></h4>
             </div>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Customer</th>
-                        <th>Amount</th>
-                        <th>Miles</th>
-                        <th>Summary of work</th>
-                        <th>Edit</th>
-                        <th>Delete</th>
-                    </tr>
-                </thead>
-                <tbody id="bookEntriesBody">
-                </tbody>
-            </table>
+            <div id="bookEntriesBody"></div>
         </div>
     </div>
 
