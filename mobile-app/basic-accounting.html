@@ -177,7 +177,7 @@
                 addBookEntry(bookEntry, function() {
                     $('#bookEntry').hide();
                     $('#createBookEntryModal')[0].scrollIntoView();
-                    populateBookEntries();
+                    populateBookEntries([ bookEntry ]);
                 });
             });
         }
@@ -374,12 +374,19 @@
             };
         }
 
-        function populateBookEntries() {
+        function populateBookEntries(providedBookEntries) {
+            $('#bookEntry').hide();
+            $('#customerDetails').hide();
+            $('#findCustomer').hide();
+            $('#bookEntries').show();
+
+            $('#bookEntriesSummary').show();
+
             var html = "";
             var total = 0;
             var totalMiles = 0;
 
-            getAllBookEntries(function(bookEntries) {
+            function callback(bookEntries) {
                 var bookEntries = orderBookEntries(bookEntries);
 
                 bookEntries.forEach(function(bookEntry) {
@@ -397,7 +404,16 @@
                 $('#bookEntries').show();
                 $('#total').html(total.toFixed(2));
                 $('#totalMiles').html(totalMiles.toFixed(2));
-            });
+            }
+
+            if (providedBookEntries !== undefined) {
+                $('#bookEntriesSummary').hide();
+                callback(providedBookEntries);
+                return;
+            }
+
+            getAllBookEntries(callback);
+            
         }
 
         function download() {
@@ -511,9 +527,10 @@
         <div class="col-md-3 clear">
             Default date:<input id="defaultWhen" type="date" class="form-control inputMargin" required="" placeholder="When">
         </div>
-        <div class="col-md-3 clear inputMargin marginBottom">
+        <div class="col-md-12 clear inputMargin marginBottom">
             <button id="createBookEntryModal" type="button" class="btn btn-default">Create Book Entry</button>
             <button id="createCustomerModal" type="button" class="btn btn-default">Create Customer</button>
+            <button id="showAllBookEntries" type="button" class="btn btn-default" onclick="javascript:populateBookEntries();">All Entries</button>
         </div>
         
         <a id="downloadAnchorElem" style="display:none"></a>
@@ -668,8 +685,10 @@
         </div>
 
         <div id="bookEntries" class="col-md-12 clear">
-            <h3 style="padding-top: 5px">Total Amount: £<span id="total"></span></h3>
-            <h3>Total Miles: <span id="totalMiles"></span></h3>
+            <div id="bookEntriesSummary">
+                <h3 style="padding-top: 5px">Total Amount: £<span id="total"></span></h3>
+                <h3>Total Miles: <span id="totalMiles"></span></h3>
+            </div>
             <table class="table">
                 <thead>
                     <tr>
