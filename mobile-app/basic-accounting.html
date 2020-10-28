@@ -393,7 +393,14 @@
             var allRecords = customersStore.getAll();
 
             allRecords.onsuccess = function() { 
-                successCallback(allRecords.result);
+                var results = allRecords.result.sort(function(a, b){
+                    var aFull = a.full.toLowerCase();
+                    var bFull = b.full.toLowerCase();
+                    if (aFull < bFull) { return -1; }
+                    if (aFull > bFull) { return 1; }
+                    return 0;
+                });
+                successCallback(results);
             };
         }
 
