@@ -542,6 +542,7 @@
 
             var reader = new FileReader();
             reader.onload = function() {
+                $('#bookEntries').hide();
                 var json = reader.result;
                 var state = JSON.parse(json);
 
@@ -549,9 +550,15 @@
                 var customersStore = customersTransaction.objectStore('customer');
                 customersStore.clear();
 
+                var numberOfCustomers = 0;
+                var numberOfCustomersImported = 0;
+                var numberOfBookEntries = 0;
+                var numberOfBookEntriesImported = 0;
+
                 state.customers.forEach(function(customer) {
-                    addCustomer(customer, function() {});
-                })
+                    addCustomer(customer, function() { numberOfCustomersImported++; });
+                    numberOfCustomers++;
+                });
 
                 var bookyEntryTransaction = db.transaction("bookEntry", "readwrite");
                 var bookEntryStore = bookyEntryTransaction.objectStore('bookEntry');
@@ -559,10 +566,16 @@
 
                 state.bookEntries.forEach(function(bookEntry) {
                     bookEntry.when = new Date(bookEntry.when);
-                    addBookEntry(bookEntry, function() {});
+                    addBookEntry(bookEntry, function() { numberOfBookEntriesImported++; });
+                    numberOfBookEntries++;
                 })
 
-                populateBookEntries();
+                var interval = setInterval(() => {
+                    if (numberOfCustomersImported === numberOfCustomers && numberOfBookEntriesImported === numberOfBookEntries) {
+                        clearInterval(interval);
+                        populateBookEntries();
+                    }
+                }, 100);
             };
 
             reader.readAsText(input.files[0]);

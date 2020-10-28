@@ -4,7 +4,6 @@ node tool to generate csv or something from json? could have from and to dates o
 - find customer edit what after?
 - filtering by date
 - filtering by date download?
-- when importing wait for all callbacks to complete???????
 
 edit customers? ids would stay the same, edit entries too!
 edit customer should find all book entries referencing it and update!
