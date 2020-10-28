@@ -26,7 +26,7 @@
         .marginBottom {
             margin-bottom: 5px;
         }
-        #customerDetails, #createCustomerError, #searchError, #results, #findCustomer, #createBookEntryError {
+        #customerDetails, #createCustomerError, #searchError, #results, #findCustomer, #createBookEntryError, #tools {
             display: none;
         }
 
@@ -631,6 +631,10 @@
                 });
             };
         }
+
+        function tools() {
+            $('#tools').toggle();
+        }
         
     </script>
   </head>
@@ -640,8 +644,9 @@
             <a class="navbar-brand" href="#" style="color:white">Book Keeping</a>
             <a class="navbar-brand navbar-brand-item" href="#" style="color:white" onclick="javascript:populateBookEntries();">Entries</a>
             <a class="navbar-brand navbar-brand-item" href="#" style="color:white" onclick="javascript:customers();">Customers</a>
+            <a class="navbar-brand navbar-brand-item" href="#" style="color:white" onclick="javascript:tools();">Tools</a>
         </nav>
-        <div class="col-md-12">
+        <div id="tools" class="col-md-12">
             <input type="file" id="import" name="import" class="btn btn-default" accept="application/json" onchange="openFile(event)">
             <button id="downloadButton" type="button" class="btn btn-default btn-primary">Download</button>
             <br /><br />
