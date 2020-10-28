@@ -7,6 +7,7 @@ node tool to generate csv or something from json? could have from and to dates o
 
 edit customers? ids would stay the same, edit entries too!
 edit customer should find all book entries referencing it and update!
+
 1. // sorting could probably be done via an index somehow on query for date desc on book entry!!!!!!!!!!
 2. // finding customer may be could be done with an index and contains query?
 3. rather than callbacks could use promises

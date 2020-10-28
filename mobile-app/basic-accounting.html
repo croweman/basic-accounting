@@ -57,6 +57,13 @@
         .has-success .form-control {
             border-color: #5cb85c;
         }
+
+        .navbar-brand-item {
+            font-size: 15px;
+            padding-left: 5px;
+            padding-right: 5px;
+            padding-top: 16px;
+        }
     </style>
     <script type="text/JavaScript">
         var openRequest;
@@ -266,7 +273,7 @@
                 updateBookEntryRecord(bookEntry, function() {
                     $('#bookEntry').hide();
                     $('#createBookEntryModal')[0].scrollIntoView();
-                    populateBookEntries();
+                    populateBookEntries([ bookEntry ], true);
                 });
             });
         }
@@ -512,8 +519,7 @@
                 return;
             }
 
-            getAllBookEntries(callback);
-            
+            getAllBookEntries(callback);   
         }
 
         function download() {
@@ -632,6 +638,8 @@
       <div class="col-md-12" style="padding-left: 0">
         <nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: #292b2c; border-radius: 0">
             <a class="navbar-brand" href="#" style="color:white">Book Keeping</a>
+            <a class="navbar-brand navbar-brand-item" href="#" style="color:white" onclick="javascript:populateBookEntries();">Entries</a>
+            <a class="navbar-brand navbar-brand-item" href="#" style="color:white" onclick="javascript:customers();">Customers</a>
         </nav>
         <div class="col-md-12">
             <input type="file" id="import" name="import" class="btn btn-default" accept="application/json" onchange="openFile(event)">
@@ -641,7 +649,6 @@
         <div class="col-md-12 clear inputMargin marginBottom">
             <button id="createBookEntryModal" type="button" class="btn btn-default btn-primary">Entry +</button>
             <button id="createCustomerModal" type="button" class="btn btn-default btn-primary">Customer +</button>
-            <button id="showAllBookEntries" type="button" class="btn btn-default btn-primary" onclick="javascript:populateBookEntries();">All Entries</button>
         </div>
         
         <a id="downloadAnchorElem" style="display:none"></a>
