@@ -245,6 +245,7 @@
                 $('#town').val(customer.town);
                 $('#postcode').val(customer.postcode);
                 $('#miles').val(customer.miles);
+                $('#name').focus();
             });
         }
 
@@ -320,6 +321,7 @@
                 document.getElementById('whenTime').selectedIndex = 0;
                 $('#amount').val('');
                 $('#summary').val('');
+                $('#when').focus();
             });
 
             $('#customer').click(function() {
@@ -397,6 +399,8 @@
                         break;
                     }
                 }
+
+                $('#when').focus();
             })
         }
 
@@ -527,6 +531,8 @@
                 $('#expenseAmount').val('');
                 $('#expenseSummary').val('');
                 $('#expenseMiles').val('0');
+
+                $('#expenseWhen').focus();
             });
 
             $('#createExpense').click(function() {
@@ -586,7 +592,7 @@
                 $('#expenseSupplier').val(expense.supplier);
                 $('#expenseMiles').val(expense.miles);
 
-                document.getElementById('whenTime').selectedIndex = 0;
+                $('#expenseWhen').focus();
             });
         }
 
