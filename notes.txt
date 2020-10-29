@@ -1,13 +1,21 @@
 node tool to generate csv or something from json? could have from and to dates or everything
 
+https://javascript.info/indexeddb
 
 - find customer edit what after?
 - filtering by date
 - filtering by date download?
 
-remove migrate once migrated!!!
+new dates and storing
 
-1. // sorting could probably be done via an index somehow on query for date desc on book entry!!!!!!!!!!
-2. // finding customer may be could be done with an index and contains query?
-3. rather than callbacks could use promises
+expenses
+
+show mileage cost * 0.45
+
+filtering by date, default a year?
+
+collection with 1 record, prompting if you haven't downloaded recently
+- can we create an email with attachement etc to send?
+
+green/red validation?
 

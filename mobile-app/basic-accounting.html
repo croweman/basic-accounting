@@ -77,6 +77,7 @@
             "July", "August", "September", "October", "November", "December"
         ];
         var defaultWhen = getWhen(new Date());
+        var costPerMile = 0.45;
 
         function addCustomer(customer, successCallback) {
             var customersTransaction = db.transaction("customer", "readwrite");
@@ -437,22 +438,12 @@
 
             $('#findCustomer').hide();
             $('#bookEntry').show();
-            // here
+    
             $('#customerId').val(id);
             $('#customer').val(input.data().summary);
             $('#createBookEntryError').hide();
             miles = parseFloat(input.data().miles)
         };
-
-        function orderBookEntries(bookEntries) {
-            // could probably be done via an index somehow on query!!!!!!!!!!
-            var sortedBookEntries = bookEntries.sort(function(a, b){
-                return b.when - a.when; 
-                }
-            );
-
-            return sortedBookEntries;
-        }
 
         function getFormattedDate(date) {
             var year = date.getFullYear();
@@ -508,27 +499,36 @@
         function getAllBookEntries(successCallback) {
             var bookEntriesTransaction = db.transaction("bookEntry", "readwrite");
             var bookEntriesStore = bookEntriesTransaction.objectStore('bookEntry');
-            var allRecords = bookEntriesStore.getAll();
+            var index = bookEntriesStore.index('when');
+            var request = index.openCursor(null, ['prev']);
+            var results = [];
 
-            allRecords.onsuccess = function() {
-                successCallback(allRecords.result);
+            request.onsuccess = function() {
+                let cursor = request.result;
+                if (cursor) {
+                    results.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    successCallback(results);
+                }
             };
         }
 
         function getAllCustomers(successCallback) {
             var customersTransaction = db.transaction("customer", "readwrite");
             var customersStore = customersTransaction.objectStore('customer');
-            var allRecords = customersStore.getAll();
+            var index = customersStore.index('full');
+            var request = index.openCursor(null, ['next']);
+            var results = [];
 
-            allRecords.onsuccess = function() { 
-                var results = allRecords.result.sort(function(a, b){
-                    var aFull = a.full.toLowerCase();
-                    var bFull = b.full.toLowerCase();
-                    if (aFull < bFull) { return -1; }
-                    if (aFull > bFull) { return 1; }
-                    return 0;
-                });
-                successCallback(results);
+            request.onsuccess = function() { 
+                let cursor = request.result;
+                if (cursor) {
+                    results.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    successCallback(results);
+                }
             };
         }
 
@@ -584,10 +584,9 @@
             var html = "";
             var total = 0;
             var totalMiles = 0;
+            var totalMilesCost = 0;
 
             function callback(bookEntries) {
-                var bookEntries = orderBookEntries(bookEntries);
-
                 var data = {};
                 var keys = [];
 
@@ -607,6 +606,7 @@
                 keys.forEach(function(key) {
                     var currentTotal = 0;
                     var currentMiles = 0;
+                    var currentMilesCost = 0;
 
                     data[key].forEach(function(bookEntry) {
                         var miles = bookEntry.miles;
@@ -617,7 +617,9 @@
                         total += bookEntry.amount;
                         currentTotal += bookEntry.amount;
                         totalMiles += miles;
+                        totalMilesCost += (miles * costPerMile);
                         currentMiles += miles;
+                        currentMilesCost += (miles * costPerMile);
                     });
 
                     var tableId = key.replace(' ', '');
@@ -628,7 +630,7 @@
                         html += '<div class="form-group"><button id="' + tableId + 'Button"class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample" onclick="toggleTable(\'' + tableId + '\')">' + key + ' ' + buttonAdditionalText + ' ' + (expand ? '-' : '+') + '</button></div>';
                     }
                     
-                    html += '<div id="' + tableId + '"' + (expand ? '' : ' style="display:none"') + ' class="form-group"><label>Amount: £' + currentTotal.toFixed(2) + '</label><br /><label>Miles: ' + currentMiles.toFixed(2) + '</label>';
+                    html += '<div id="' + tableId + '"' + (expand ? '' : ' style="display:none"') + ' class="form-group"><label>Income: £' + currentTotal.toFixed(2) + '</label><br /><label>Miles: ' + currentMiles.toFixed(2) + '</label><br /><label>Miles cost: ' + currentMilesCost.toFixed(2) + '</label>';
                     html += '<table class="table"><thead><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Miles</th><th>Summary of work</th><th>Delete</th></tr></thead><tbody>';
 
                     data[key].forEach(function(bookEntry) {
@@ -643,6 +645,7 @@
                 $('#bookEntries').show();
                 $('#total').html(total.toFixed(2));
                 $('#totalMiles').html(totalMiles.toFixed(2));
+                $('#totalMilesCost').html(totalMilesCost.toFixed(2));
             }
 
             if (providedBookEntries !== undefined) {
@@ -720,10 +723,12 @@
         };
 
         function initialise() {
-            openRequest = indexedDB.open('BookKeeping', 1);
+            openRequest = indexedDB.open('BookKeeping', 2);
             
-            openRequest.onupgradeneeded = function() {
+            openRequest.onupgradeneeded = function(event) {
                 db = openRequest.result;
+                var transaction = event.target.transaction;
+
                 if (!db.objectStoreNames.contains('customer')) {
                     var store = db.createObjectStore('customer', { keyPath: 'id', autoIncrement: true });
                     store.createIndex('full', ['full'], { unique:false });
@@ -731,6 +736,21 @@
 
                 if (!db.objectStoreNames.contains('bookEntry'))
                     db.createObjectStore('bookEntry', { keyPath: 'id', autoIncrement: true });
+
+                var bookEntryStore = transaction.objectStore('bookEntry');    
+                
+                if (!bookEntryStore.indexNames.contains('when')) {
+                    bookEntryStore.createIndex('when', ['when'], { unique:false });
+                }
+
+                if (!db.objectStoreNames.contains('expenses')) {
+                    var store = db.createObjectStore('expenses', { keyPath: 'id', autoIncrement: true });
+                    store.createIndex('when', ['when'], { unique:false });
+                }
+
+                if (!db.objectStoreNames.contains('settings')) {
+                    var store = db.createObjectStore('settings', { keyPath: 'id', autoIncrement: true });
+                }
             };
 
             openRequest.onsuccess = function() {
@@ -806,7 +826,7 @@
   <body>
       <div class="col-md-12" style="padding-left: 0">
         <nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: #292b2c; border-radius: 0">
-            <a class="navbar-brand" href="#" style="color:white">Book Keeping</a>
+            <a class="navbar-brand" href="#" style="color:white" onclick="javascript:populateBookEntries();return false;">Book Keeping</a>
             <a class="navbar-brand navbar-brand-item" href="#" style="color:white" onclick="javascript:populateBookEntries();return false;">Entries</a>
             <a class="navbar-brand navbar-brand-item" href="#" style="color:white" onclick="javascript:customers();return false;">Customers</a>
             <a class="navbar-brand navbar-brand-item" href="#" style="color:white" onclick="javascript:tools();return false;">Tools</a>
@@ -835,11 +855,11 @@
                         </div>
                         <div class="form-group">
                             <label for="addressLine1">Address Line 1</label>
-                            <input id="addressLine1" class="form-control" required="" onClick="this.select();">
+                            <input id="addressLine1" class="form-control" required="">
                         </div>
                         <div class="form-group">
                             <label for="town">Town</label>
-                            <input id="town" class="form-control" required="" onClick="this.select();">
+                            <input id="town" class="form-control" required="">
                         </div>
                         <div class="form-group">
                             <label for="postcode">Postcode</label>
@@ -931,11 +951,11 @@
                         </div>
                         <div class="form-group">
                             <label for="summary">Summary of work</label>
-                            <input id="summary" class="form-control" required="" onClick="this.select();">
+                            <input id="summary" class="form-control" required="">
                         </div>
                         <div class="form-group">
                             <label for="amount">Amount (e.g. 12.95)</label>
-                            <input id="amount" class="form-control"required="" onClick="this.select();">
+                            <input id="amount" class="form-control"required="">
                         </div>
                         <div id="createBookEntryError" class="alert alert-danger" role="alert">
                             Populate fields correctly!
@@ -979,8 +999,9 @@
 
         <div id="bookEntries" class="col-md-12 clear">
             <div id="bookEntriesSummary">
-                <h4 style="padding-top: 5px">Total Amount: £<span id="total"></span></h4>
+                <h4 style="padding-top: 5px">Total Income: £<span id="total"></span></h4>
                 <h4>Total Miles: <span id="totalMiles"></span></h4>
+                <h4>Total Miles Cost: £<span id="totalMilesCost"></span></h4>
             </div>
             <div id="bookEntriesBody"></div>
         </div>
