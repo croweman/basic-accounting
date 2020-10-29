@@ -6,16 +6,11 @@ https://javascript.info/indexeddb
 - filtering by date
 - filtering by date download?
 
-new dates and storing
-
 expenses
 
-show mileage cost * 0.45
+filtering by date, default a year? for entries and expenses!
 
-filtering by date, default a year?
-
-collection with 1 record, prompting if you haven't downloaded recently
-- can we create an email with attachement etc to send?
+collection with 1 record, prompting if you haven't downloaded recently, message to download and email to yourself!!!
 
 green/red validation?
 
