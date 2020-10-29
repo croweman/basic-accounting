@@ -64,6 +64,10 @@
             padding-right: 5px;
             padding-top: 16px;
         }
+
+        .topNavDropDownItem {
+            color: white!important;
+        }
     </style>
     <script type="text/JavaScript">
         var openRequest;
@@ -577,6 +581,8 @@
             $('#customerDetails').hide();
             $('#findCustomer').hide();
             $('#customers').hide();
+            $('#tools').hide();
+            $('#createButtons').show();
             $('#bookEntries').show();
 
             $('#bookEntriesSummary').show();
@@ -795,6 +801,8 @@
             $('#customerDetails').hide();
             $('#findCustomer').hide();
             $('#bookEntries').hide();
+            $('#tools').hide();
+            $('#createButtons').hide();
             $('#customerFilter').val('');
             $('#customers').show();
 
@@ -818,25 +826,53 @@
         }
 
         function tools() {
-            $('#tools').toggle();
+            $('#tools').show();
+            $('#createButtons').hide();
+            $('#bookEntries').hide();
+            $('#bookEntry').hide();
+            $('#findCustomer').hide();
+            $('#createCustomerError').hide();
+            $('#customers').hide();
+        }
+
+        function collapseDropDownMenu() {
+            $('#dropDownMenu').removeClass('in');
         }
         
     </script>
   </head>
   <body>
       <div class="col-md-12" style="padding-left: 0">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: #292b2c; border-radius: 0">
-            <a class="navbar-brand" href="#" style="color:white" onclick="javascript:populateBookEntries();return false;">Book Keeping</a>
-            <a class="navbar-brand navbar-brand-item" href="#" style="color:white" onclick="javascript:populateBookEntries();return false;">Entries</a>
-            <a class="navbar-brand navbar-brand-item" href="#" style="color:white" onclick="javascript:customers();return false;">Customers</a>
-            <a class="navbar-brand navbar-brand-item" href="#" style="color:white" onclick="javascript:tools();return false;">Tools</a>
+        <nav class="navbar navbar-default" style="background-color: #292b2c">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#dropDownMenu" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#" onclick="javascript:populateBookEntries();return false;" style="color: white">Book Keeping</a>
+                </div>
+            
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="dropDownMenu">
+                <ul class="nav navbar-nav">
+                    <li><a class="topNavDropDownItem" href="#" onclick="javascript:populateBookEntries();collapseDropDownMenu();return false;">Entries</a></li>
+                    <li><a class="topNavDropDownItem" href="#" onclick="javascript:customers();collapseDropDownMenu();return false;">Customers</a></li>
+                    <li><a class="topNavDropDownItem" href="#" onclick="javascript:tools();collapseDropDownMenu();return false;">Tools</a></li>
+                </ul>
+                </div>
+            </div>
         </nav>
+
         <div id="tools" class="col-md-12">
             <input type="file" id="import" name="import" class="btn btn-default" accept="application/json" onchange="openFile(event)">
             <button id="downloadButton" type="button" class="btn btn-default btn-primary">Download</button>
             <br /><br />
         </div>
-        <div class="col-md-12 clear inputMargin marginBottom">
+        <div id="createButtons" class="col-md-12 clear inputMargin marginBottom">
             <button id="createBookEntryModal" type="button" class="btn btn-default btn-primary">Entry +</button>
             <button id="createCustomerModal" type="button" class="btn btn-default btn-primary">Customer +</button>
         </div>
