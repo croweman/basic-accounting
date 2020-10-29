@@ -2,16 +2,6 @@ node tool to generate csv or something from json? could have from and to dates o
 
 https://javascript.info/indexeddb
 
-- find customer edit what after?
-- filtering by date
-- filtering by date download?
-
-
-scroll into view won't work as item scrolling to no longer visible!!
-
-expenses
-
-filtering by date, default a year? for entries and expenses!
 
 collection with 1 record, prompting if you haven't downloaded recently, message to download and email to yourself!!!
 

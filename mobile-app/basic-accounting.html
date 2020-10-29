@@ -26,7 +26,7 @@
         .marginBottom {
             margin-bottom: 5px;
         }
-        #customerDetails, #createCustomerError, #searchError, #results, #findCustomer, #createBookEntryError, #tools, #expense {
+        #customerDetails, #createCustomerError, #searchError, #results, #findCustomer, #createBookEntryError, #tools, #expense, #expenses, #customers {
             display: none;
         }
 
@@ -92,6 +92,7 @@
         ];
         var defaultWhen = getWhen(new Date());
         var costPerMile = 0.45;
+        var currentView = 'entries';
 
         function addCustomer(customer, successCallback) {
             var customersTransaction = db.transaction("customer", "readwrite");
@@ -145,6 +146,26 @@
             var request = expenseStore.put(expense);
             
             request.onsuccess = successCallback;
+        }
+
+        function dateFiltersChanged() {
+            if (currentView === 'entries') {
+                populateBookEntries();
+            }
+
+            if (currentView === 'expenses') {
+                expenses();
+            }
+        }
+
+        function dateFilters() {
+            $('#fromDate').change(function() {
+                dateFiltersChanged();
+            });
+
+            $('#toDate').change(function() {
+                dateFiltersChanged();
+            });
         }
 
         function createCustomer() {
@@ -602,6 +623,20 @@
             });
         }
 
+        function filterResultsByDateFilters(results) {
+
+            var dataFilters = getFromAndToDate();
+            var filteredResults = [];
+
+            results.forEach(function(result) {
+                if (result.when >= dataFilters.fromDate && result.when <= dataFilters.toDate) {
+                    filteredResults.push(result);
+                }
+            });
+
+            return filteredResults;
+        }
+
         function getFormattedDate(date) {
             var year = date.getFullYear();
 
@@ -679,6 +714,7 @@
             var bookEntriesStore = bookEntriesTransaction.objectStore('bookEntry');
             var index = bookEntriesStore.index('when');
             var request = index.openCursor(null, ['prev']);
+
             var results = [];
 
             request.onsuccess = function() {
@@ -687,8 +723,18 @@
                     results.push(cursor.value);
                     cursor.continue();
                 } else {
-                    successCallback(results);
+                    successCallback(filterResultsByDateFilters(results));
                 }
+            };
+        }
+
+        function getFromAndToDate() {
+            var fromDate = $('#fromDate').val() + 'T00:00:00';
+            var toDate = $('#toDate').val() + 'T23:59:59';
+
+            return {
+                fromDate: new Date(fromDate),
+                toDate: new Date(toDate)
             };
         }
 
@@ -696,6 +742,7 @@
             var customersTransaction = db.transaction("customer", "readwrite");
             var customersStore = customersTransaction.objectStore('customer');
             var index = customersStore.index('full');
+
             var request = index.openCursor(null, ['next']);
             var results = [];
 
@@ -723,7 +770,7 @@
                     results.push(cursor.value);
                     cursor.continue();
                 } else {
-                    successCallback(results);
+                    successCallback(filterResultsByDateFilters(results));
                 }
             };
         }
@@ -779,6 +826,7 @@
         }
 
         function populateBookEntries(providedBookEntries, removeCollapseButton) {
+            currentView = 'entries';
             $('#bookEntry').hide();
             $('#customerDetails').hide();
             $('#findCustomer').hide();
@@ -980,6 +1028,16 @@
             openRequest.onsuccess = function() {
                 db = openRequest.result;
 
+                var toDate = new Date().toISOString();
+                toDate = toDate.substr(0, toDate.indexOf('T'));
+                $('#toDate').val(toDate);
+
+                var fromDate = new Date();
+                fromDate.setFullYear(fromDate.getFullYear() - 2);
+                fromDate = fromDate.toISOString();
+                fromDate = fromDate.substr(0, fromDate.indexOf('T'));
+                $('#fromDate').val(fromDate);
+
                 createCustomer();
                 createBookEntry();
                 updateBookEntry();
@@ -988,6 +1046,7 @@
                 updateExpense();
                 findCustomer();
                 populateBookEntries();
+                dateFilters();
 
                 $('#downloadButton').click(function() {
                     download();
@@ -1010,16 +1069,6 @@
                     timeout = setTimeout(findCustomer2, 100);
                 });
 
-                var toDate = new Date().toISOString();
-                toDate = toDate.substr(0, toDate.indexOf('T'));
-                $('#toDate').val(toDate);
-
-                var fromDate = new Date();
-                fromDate.setFullYear(fromDate.getFullYear() - 2);
-                fromDate = fromDate.toISOString();
-                fromDate = fromDate.substr(0, fromDate.indexOf('T'));
-                $('#fromDate').val(fromDate);
-
                 getAllCustomers(function(customers) {
                     allCustomers = customers;
                 });
@@ -1027,6 +1076,7 @@
         }
 
         function customers() {
+            currentView = 'customers';
             $('#bookEntry').hide();
             $('#customerDetails').hide();
             $('#findCustomer').hide();
@@ -1057,6 +1107,7 @@
         }
 
         function expenses() {
+            currentView = 'expenses';
             $('#bookEntry').hide();
             $('#customerDetails').hide();
             $('#findCustomer').hide();
@@ -1092,6 +1143,7 @@
         }
 
         function tools() {
+            currentView = 'tools';
             $('#tools').show();
             $('#bookEntries').hide();
             $('#bookEntry').hide();
@@ -1306,7 +1358,7 @@
                         </div>
                         <div class="form-group">
                             <label for="expenseMiles">Miles</label>
-                            <input id="expenseMiles" class="form-control"required="">
+                            <input id="expenseMiles" class="form-control" required="" onClick="this.select();">
                         </div>
                         <div id="createExpenseError" class="alert alert-danger" role="alert">
                             Populate fields correctly!
