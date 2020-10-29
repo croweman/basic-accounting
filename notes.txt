@@ -6,6 +6,9 @@ https://javascript.info/indexeddb
 - filtering by date
 - filtering by date download?
 
+
+scroll into view won't work as item scrolling to no longer visible!!
+
 expenses
 
 filtering by date, default a year? for entries and expenses!

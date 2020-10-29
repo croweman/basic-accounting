@@ -74,6 +74,10 @@
             margin-left: 0; 
             padding-left: 0;
         }
+
+        #dateFitlering {
+            margin-top: -15px;
+        }
     </style>
     <script type="text/JavaScript">
         var openRequest;
@@ -193,7 +197,7 @@
                     getAllCustomers(function(custs) {
                         allCustomers = custs;
                         $('#customerDetails').hide();
-                        $('#createBookEntryModal')[0].scrollIntoView();
+                        $('#dateFitlering')[0].scrollIntoView();
                         customers();
                     });
                 });
@@ -269,7 +273,7 @@
                             if (numberOfBookEntriesUpdated === numberOfBookEntriesToUpdate) {
                                 clearInterval(interval);
                                 $('#customerDetails').hide();
-                                $('#createBookEntryModal')[0].scrollIntoView();
+                                $('#dateFitlering')[0].scrollIntoView();
                                 customers();
                             }
                         }, 100);
@@ -334,7 +338,7 @@
                 addBookEntry(bookEntry, function(e) {
                     bookEntry.id = e.target.result;
                     $('#bookEntry').hide();
-                    $('#createBookEntryModal')[0].scrollIntoView();
+                    $('#dateFitlering')[0].scrollIntoView();
                     populateBookEntries([ bookEntry ], true);
                 });
             });
@@ -405,7 +409,7 @@
 
                 updateBookEntryRecord(bookEntry, function() {
                     $('#bookEntry').hide();
-                    $('#createBookEntryModal')[0].scrollIntoView();
+                    $('#dateFitlering')[0].scrollIntoView();
                     populateBookEntries([ bookEntry ], true);
                 });
             });
@@ -417,7 +421,7 @@
             $('#resultsBody').empty();
             $('#results').hide();
             $('#filter').focus();
-            $('#createBookEntryModal')[0].scrollIntoView();
+            $('#dateFitlering')[0].scrollIntoView();
         }
 
         function findCustomer() {
@@ -477,9 +481,6 @@
             $('#createBookEntryError').hide();
             miles = parseFloat(input.data().miles)
         };
-
-
-
 
         function createExpense() {
             $('#createExpenseModal').click(function() {
@@ -600,9 +601,6 @@
                 });
             });
         }
-
-
-
 
         function getFormattedDate(date) {
             var year = date.getFullYear();
@@ -1012,6 +1010,16 @@
                     timeout = setTimeout(findCustomer2, 100);
                 });
 
+                var toDate = new Date().toISOString();
+                toDate = toDate.substr(0, toDate.indexOf('T'));
+                $('#toDate').val(toDate);
+
+                var fromDate = new Date();
+                fromDate.setFullYear(fromDate.getFullYear() - 2);
+                fromDate = fromDate.toISOString();
+                fromDate = fromDate.substr(0, fromDate.indexOf('T'));
+                $('#fromDate').val(fromDate);
+
                 getAllCustomers(function(customers) {
                     allCustomers = customers;
                 });
@@ -1123,6 +1131,23 @@
                 </div>
             </div>
         </nav>
+
+        <div id="dateFitlering">
+            <div class="panel-body">
+                <div class="form-group">
+                    <label for="customer">Data Filtering</label>
+                    <br />
+                    <div class="col-md-12" style="padding-left: 0; width: 500px">
+                        <div class="col-md-6" style="padding-left: 0;width: 170px;float: left">
+                            <input id="fromDate" type="date" class="form-control" required="">
+                        </div>
+                        <div class="col-md-6" style="padding-left: 0;width: 170px;float: left">
+                            <input id="toDate" type="date" class="form-control" required="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div id="tools" class="col-md-12">
             <input type="file" id="import" name="import" class="btn btn-default" accept="application/json" onchange="openFile(event)">
