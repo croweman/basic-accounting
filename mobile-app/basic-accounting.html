@@ -94,6 +94,46 @@
         var costPerMile = 0.45;
         var currentView = 'entries';
 
+        function updateValidationIndicator(id, valid) {
+            if (valid) {
+                $('#' + id + 'Container').addClass('has-success');
+            } else {
+                $('#' + id + 'Container').addClass('has-danger');
+            }
+        }
+
+        function hasValue(value) {
+            return value.trim().length > 0;
+        }
+
+        function hasValidMoneyValue(value) {
+            let moneyRegEx = new RegExp(/^[0-9]+(\.[0-9]{2}){0,1}$/);
+
+            return moneyRegEx.test(value);
+        }
+
+        function hasValidMilesValue(value) {
+            let milesRegEx = new RegExp(/^[0-9]+(\.[0-9]{1,2}){0,1}$/);
+
+            return milesRegEx.test(value);
+        }
+
+        function validate(id, validation) {
+            var value = $('#' + id).val();
+            var valid = validation(value);
+            updateValidationIndicator(id, valid);
+        }
+
+        function addValidation(id, validation) {
+            $('#' + id).blur(function() {
+                validate(id, validation);
+            });
+
+            $('#' + id).change(function() {
+                validate(id, validation);
+            });
+        }
+
         function addCustomer(customer, successCallback) {
             var customersTransaction = db.transaction("customer", "readwrite");
             var customersStore = customersTransaction.objectStore('customer');
@@ -188,6 +228,12 @@
 
         function createCustomer() {
 
+            addValidation('name', hasValue);
+            addValidation('addressLine1', hasValue);
+            addValidation('town', hasValue);
+            addValidation('postcode', hasValue);
+            addValidation('miles', hasValidMilesValue);
+
             function createCustomerModalClick() {
                 $('#bookEntries').hide();
                 $('#bookEntry').hide();
@@ -202,6 +248,13 @@
                 $('#createCustomer').show();
                 $('#updateCustomer').hide();
                 $('#customerDetails').show();
+
+                removeValidationStatus('name');
+                removeValidationStatus('addressLine1');
+                removeValidationStatus('town');
+                removeValidationStatus('postcode');
+                removeValidationStatus('miles');
+
                 $('#name').focus();
             }
 
@@ -218,8 +271,14 @@
 
                 let milesRegEx = new RegExp(/^[0-9]+(\.[0-9]{1,2}){0,1}$/);
 
+                validate('name', hasValue);
+                validate('addressLine1', hasValue);
+                validate('town', hasValue);
+                validate('postcode', hasValue);
+                validate('miles', hasValidMilesValue);
+
                 if (name.length === 0 || addressLine1.length === 0 || town.length === 0 || postcode.length === 0 || !milesRegEx.test(miles)) {
-                    $('#createCustomerError').show();
+                    //$('#createCustomerError').show();
                     return;
                 }
 
@@ -263,6 +322,13 @@
                 $('#town').val(customer.town);
                 $('#postcode').val(customer.postcode);
                 $('#miles').val(customer.miles);
+
+                removeValidationStatus('name');
+                removeValidationStatus('addressLine1');
+                removeValidationStatus('town');
+                removeValidationStatus('postcode');
+                removeValidationStatus('miles');
+
                 $('#name').focus();
             });
         }
@@ -277,8 +343,14 @@
 
                 let milesRegEx = new RegExp(/^[0-9]+(\.[0-9]{1,2}){0,1}$/);
 
+                validate('name', hasValue);
+                validate('addressLine1', hasValue);
+                validate('town', hasValue);
+                validate('postcode', hasValue);
+                validate('miles', hasValidMilesValue);
+
                 if (name.length === 0 || addressLine1.length === 0 || town.length === 0 || postcode.length === 0 || !milesRegEx.test(miles)) {
-                    $('#createCustomerError').show();
+                    //$('#createCustomerError').show();
                     return;
                 }
 
@@ -323,6 +395,12 @@
         }
 
         function createBookEntry() {
+
+            addValidation('customer', hasValue);
+            addValidation('when', hasValue);
+            addValidation('summary', hasValue);
+            addValidation('amount', hasValidMoneyValue);
+
             $('#createBookEntryModal').click(function() {
                 $('#createBookEntry').show();
                 $('#updateBookEntry').hide();
@@ -332,6 +410,11 @@
                 $('#findCustomer').hide();
                 $('#customers').hide();
                 $('#bookEntry').show();
+
+                removeValidationStatus('customer');
+                removeValidationStatus('when');
+                removeValidationStatus('amount');
+                removeValidationStatus('summary');
 
                 $('#customerId').val('');
                 $('#customer').val('');
@@ -357,10 +440,15 @@
 
                 let moneyRegEx = new RegExp(/^[0-9]+(\.[0-9]{2}){0,1}$/);
 
+                validate('customer', hasValue);
+                validate('when', hasValue);
+                validate('summary', hasValue);
+                validate('amount', hasValidMoneyValue);
+
                 var valid = customerId.length > 0 && when.length > 0 && moneyRegEx.test(amount) && summary.length > 0;
 
                 if (!valid) {
-                    $('#createBookEntryError').show();
+                    //$('#createBookEntryError').show();
                     return;
                 }
 
@@ -418,6 +506,11 @@
                     }
                 }
 
+                removeValidationStatus('customer');
+                removeValidationStatus('when');
+                removeValidationStatus('amount');
+                removeValidationStatus('summary');
+
                 $('#when').focus();
             })
         }
@@ -433,10 +526,15 @@
 
                 let moneyRegEx = new RegExp(/^[0-9]+(\.[0-9]{2}){0,1}$/);
 
+                validate('customer', hasValue);
+                validate('when', hasValue);
+                validate('summary', hasValue);
+                validate('amount', hasValidMoneyValue);
+
                 var valid = customerId.length > 0 && when.length > 0 && moneyRegEx.test(amount) && summary.length > 0;
 
                 if (!valid) {
-                    $('#createBookEntryError').show();
+                    //$('#createBookEntryError').show();
                     return;
                 }
 
@@ -509,6 +607,11 @@
             $('#customersBody').append(html);
         }
 
+        function removeValidationStatus(id) {
+            $('#' + id + 'Container').removeClass('has-success')
+            $('#' + id + 'Container').removeClass('has-danger')
+        }
+
         function selectChosenCustomer() {
             var input = $("input:radio[name='customerradio']:checked");
 
@@ -521,11 +624,20 @@
     
             $('#customerId').val(id);
             $('#customer').val(input.data().summary);
+            removeValidationStatus('customer');
+            $('#customerContainer').addClass('has-success')
             $('#createBookEntryError').hide();
             miles = parseFloat(input.data().miles)
         };
 
         function createExpense() {
+
+            addValidation('expenseWhen', hasValue);
+            addValidation('expenseSupplier', hasValue);
+            addValidation('expenseSummary', hasValue);
+            addValidation('expenseAmount', hasValidMoneyValue);
+            addValidation('expenseMiles', hasValidMilesValue);
+
             $('#createExpenseModal').click(function() {
                 $('#createBookEntry').show();
                 $('#updateBookEntry').hide();
@@ -551,6 +663,12 @@
                 $('#expenseMiles').val('0');
 
                 $('#expenseWhen').focus();
+
+                removeValidationStatus('expenseWhen');
+                removeValidationStatus('expenseSupplier');
+                removeValidationStatus('expenseSummary');
+                removeValidationStatus('expenseAmount');
+                removeValidationStatus('expenseMiles');
             });
 
             $('#createExpense').click(function() {
@@ -563,10 +681,16 @@
                 let milesRegEx = new RegExp(/^[0-9]+(\.[0-9]{1,2}){0,1}$/);
                 let moneyRegEx = new RegExp(/^[0-9]+(\.[0-9]{2}){0,1}$/);
 
+                validate('expenseWhen', hasValue);
+                validate('expenseSupplier', hasValue);
+                validate('expenseSummary', hasValue);
+                validate('expenseAmount', hasValidMoneyValue);
+                validate('expenseMiles', hasValidMilesValue);
+
                 var valid = when.length > 0 && supplier.length > 0 && summary.length > 0 && moneyRegEx.test(amount) && milesRegEx.test(miles);
 
                 if (!valid) {
-                    $('#createExpenseError').show();
+                    //$('#createExpenseError').show();
                     return;
                 }
 
@@ -610,6 +734,12 @@
                 $('#expenseSupplier').val(expense.supplier);
                 $('#expenseMiles').val(expense.miles);
 
+                removeValidationStatus('expenseWhen');
+                removeValidationStatus('expenseSupplier');
+                removeValidationStatus('expenseSummary');
+                removeValidationStatus('expenseAmount');
+                removeValidationStatus('expenseMiles');
+
                 $('#expenseWhen').focus();
             });
         }
@@ -625,10 +755,16 @@
                 let milesRegEx = new RegExp(/^[0-9]+(\.[0-9]{1,2}){0,1}$/);
                 let moneyRegEx = new RegExp(/^[0-9]+(\.[0-9]{2}){0,1}$/);
 
+                validate('expenseWhen', hasValue);
+                validate('expenseSupplier', hasValue);
+                validate('expenseSummary', hasValue);
+                validate('expenseAmount', hasValidMoneyValue);
+                validate('expenseMiles', hasValidMilesValue);
+
                 var valid = when.length > 0 && supplier.length > 0 && summary.length > 0 && moneyRegEx.test(amount) && milesRegEx.test(amount);
 
                 if (!valid) {
-                    $('#createExpenseError').show();
+                    //$('#createExpenseError').show();
                     return;
                 }
 
@@ -1058,8 +1194,6 @@
 
                 var differenceInTime = Math.abs(new Date() - settings[0].downloaded);
                 var days = Math.ceil(differenceInTime / (1000 * 60 * 60 * 24));
-
-                console.log(days);
                 
                 if (days >= 30) {
                     alert('You have not backed up data for over 30 days.  Please back up and email to yourself!');
@@ -1289,23 +1423,23 @@
                         <h3 class="panel-title">Customer Details</h3>
                     </div>
                     <div class="panel-body">
-                        <div class="form-group">
+                        <div class="form-group" id="nameContainer">
                             <label for="name">Name</label>
                             <input id="name" class="form-control" required="" autofocus="">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="addressLine1Container">
                             <label for="addressLine1">Address Line 1</label>
                             <input id="addressLine1" class="form-control" required="">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="townContainer">
                             <label for="town">Town</label>
                             <input id="town" class="form-control" required="">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="postcodeContainer">
                             <label for="postcode">Postcode</label>
                             <input id="postcode" class="form-control" required="" onClick="this.select();">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="milesContainer">
                             <label for="miles">Miles</label>
                             <input id="miles" class="form-control" required="" onClick="this.select();">
                         </div>
@@ -1330,11 +1464,11 @@
                             <label for="customerId">Customer Id</label>
                             <input id="customerId" class="form-control" required="" readonly="readonly">
                         </div>
-                        <div class="form-group">
+                        <div id="customerContainer" class="form-group">
                             <label for="customer">Customer</label>
-                            <input id="customer" class="form-control" required="" readonly="readonly">
+                        <input id="customer" class="form-control" required="" readonly="readonly">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="whenContainer">
                             <label for="when">When</label>
                             <input id="when" type="date" class="form-control" required="" onchange="javascript:defaultWhen = $('#when').val();">
                             <select id="whenTime" class="form-control" style="margin-top: 8px;">
@@ -1389,11 +1523,11 @@
                                 <option>21:00</option>
                             </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="summaryContainer">
                             <label for="summary">Summary of work</label>
                             <input id="summary" class="form-control" required="">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="amountContainer">
                             <label for="amount">Amount (e.g. 12.95)</label>
                             <input id="amount" class="form-control"required="">
                         </div>
@@ -1414,23 +1548,23 @@
                         <h3 class="panel-title">Expense</h3>
                     </div>
                     <div class="panel-body">
-                        <div class="form-group">
+                        <div class="form-group" id="expenseWhenContainer">
                             <label for="expenseWhen">When</label>
                             <input id="expenseWhen" type="date" class="form-control" required="">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="expenseSupplierContainer">
                             <label for="expenseSupplier">Supplier</label>
                             <input id="expenseSupplier" class="form-control" required="">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="expenseSummaryContainer">
                             <label for="expenseSummary">Summary of supplies</label>
                             <input id="expenseSummary" class="form-control" required="">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="expenseAmountContainer">
                             <label for="expenseAmount">Amount (e.g. 12.95)</label>
                             <input id="expenseAmount" class="form-control"required="">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="expenseMilesContainer">
                             <label for="expenseMiles">Miles</label>
                             <input id="expenseMiles" class="form-control" required="" onClick="this.select();">
                         </div>

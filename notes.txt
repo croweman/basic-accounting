@@ -2,6 +2,4 @@ node tool to generate csv or something from json? could have from and to dates o
 
 https://javascript.info/indexeddb
 
-green/red validation?
-
 coudn't get range filtering working with .bound for dates.  Don't really understand why and have done it manually for now
