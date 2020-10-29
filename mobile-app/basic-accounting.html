@@ -103,6 +103,15 @@
             request.onsuccess = successCallback;
         }
 
+        function addSetting(setting, successCallback) {
+            var settingTransaction = db.transaction("settings", "readwrite");
+            var settingStore = settingTransaction.objectStore('settings');
+
+            let request = settingStore.add(setting);
+
+            request.onsuccess = successCallback;
+        }
+
         function addBookEntry(bookEntry, successCallback) {
             var bookyEntryTransaction = db.transaction("bookEntry", "readwrite");
             var bookEntryStore = bookyEntryTransaction.objectStore('bookEntry');
@@ -135,6 +144,15 @@
             var customerStore = customerTransaction.objectStore('customer');
 
             var request = customerStore.put(customer);
+
+            request.onsuccess = successCallback;
+        }
+
+        function updateSettingRecord(setting, successCallback) {
+            var settingTransaction = db.transaction("settings", "readwrite");
+            var settingStore = settingTransaction.objectStore('settings');
+
+            var request = settingStore.put(setting);
 
             request.onsuccess = successCallback;
         }
@@ -715,7 +733,7 @@
             };
         }
 
-        function getAllBookEntries(successCallback) {
+        function getAllBookEntries(successCallback, ignoreDates) {
             var bookEntriesTransaction = db.transaction("bookEntry", "readwrite");
             var bookEntriesStore = bookEntriesTransaction.objectStore('bookEntry');
             var index = bookEntriesStore.index('when');
@@ -729,9 +747,25 @@
                     results.push(cursor.value);
                     cursor.continue();
                 } else {
-                    successCallback(filterResultsByDateFilters(results));
+                    if (ignoreDates) {
+                        successCallback(filterResultsByDateFilters(results));    
+                    } else {
+                        successCallback(results);
+                    }
                 }
             };
+        }
+
+        function getAllSettings(successCallback) {
+            var settingsTransaction = db.transaction("settings", "readwrite");
+            var settingsStore = settingsTransaction.objectStore('settings');
+            var request = settingsStore.getAll();
+
+            var results = [];
+
+            request.onsuccess = function() {
+                successCallback(request.result);
+            }
         }
 
         function getFromAndToDate() {
@@ -763,7 +797,7 @@
             };
         }
 
-        function getAllExpenses(successCallback) {
+        function getAllExpenses(successCallback, ignoreDates) {
             var expensesTransaction = db.transaction("expenses", "readwrite");
             var expensesStore = expensesTransaction.objectStore('expenses');
             var index = expensesStore.index('when');
@@ -776,7 +810,11 @@
                     results.push(cursor.value);
                     cursor.continue();
                 } else {
-                    successCallback(filterResultsByDateFilters(results));
+                    if (ignoreDates) {
+                        successCallback(filterResultsByDateFilters(results));    
+                    } else {
+                        successCallback(results);
+                    }
                 }
             };
         }
@@ -917,31 +955,42 @@
                 return;
             }
 
-            getAllBookEntries(callback);   
+            getAllBookEntries(callback);
         }
 
         function download() {
             getAllBookEntries(function(bookEntries) {
                 getAllCustomers(function(customers) {
                     getAllExpenses(function(expenses) {
-                        var data = {
-                            bookEntries: bookEntries,
-                            customers: customers,
-                            expenses: expenses
-                        };
+                        getAllSettings(function(settings) {
+                            var data = {
+                                bookEntries: bookEntries,
+                                customers: customers,
+                                expenses: expenses
+                            };
 
-                        var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-                        var dlAnchorElem = document.getElementById('downloadAnchorElem');
-                        dlAnchorElem.setAttribute("href", dataStr);
-                        var name = getFormattedDate(new Date());
-                        name = name.replace(' ', '_');
-                        name = name.replace(':', '-');
-                        name = name.replace(/\//g, '-');
-                        dlAnchorElem.setAttribute('download', 'book-entries-' + name + '.json');
-                        dlAnchorElem.click();
-                    });
+                            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+                            var dlAnchorElem = document.getElementById('downloadAnchorElem');
+                            dlAnchorElem.setAttribute("href", dataStr);
+                            var name = getFormattedDate(new Date());
+                            name = name.replace(' ', '_');
+                            name = name.replace(':', '-');
+                            name = name.replace(/\//g, '-');
+                            dlAnchorElem.setAttribute('download', 'book-entries-' + name + '.json');
+
+                            if (settings.length === 0) {
+                                addSetting({ downloaded: new Date() }, function() {});
+                            } else {
+                                var setting = settings[0];
+                                setting.downloaded = new Date();
+                                updateSettingRecord(setting, function() { });
+                            }
+
+                            dlAnchorElem.click();
+                        });
+                    }, true);
                 })
-            });
+            }, true);
         }
 
         function openFile(event) {
@@ -999,6 +1048,24 @@
 
             reader.readAsText(input.files[0]);
         };
+
+        function promptForDownload() {
+            getAllSettings(function(settings) {
+                if (settings.length === 0) {
+                    alert('You have never backed up data.  Please back up and email to yourself!');
+                    return;
+                }
+
+                var differenceInTime = Math.abs(new Date() - settings[0].downloaded);
+                var days = Math.ceil(differenceInTime / (1000 * 60 * 60 * 24));
+
+                console.log(days);
+                
+                if (days >= 30) {
+                    alert('You have not backed up data for over 30 days.  Please back up and email to yourself!');
+                }
+            });
+        }
 
         function initialise() {
             openRequest = indexedDB.open('BookKeeping', 2);
@@ -1077,6 +1144,7 @@
 
                 getAllCustomers(function(customers) {
                     allCustomers = customers;
+                    promptForDownload();
                 });
             };
         }
