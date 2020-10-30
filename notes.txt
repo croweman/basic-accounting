@@ -2,4 +2,13 @@ node tool to generate csv or something from json? could have from and to dates o
 
 https://javascript.info/indexeddb
 
-coudn't get range filtering working with .bound for dates.  Don't really understand why and have done it manually for now
+- settings screen (override reminder date for now, defaults to 30 if not set)
+- settings screen number of months to show, default 3 months, can be overriden
+
+- coudn't get range filtering working with .bound for dates.  Don't really understand why and have done it manually for now
+TRy agin?
+
+- refactor javascript etc (low)
+
+
+
