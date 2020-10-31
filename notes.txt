@@ -2,12 +2,13 @@ node tool to generate csv or something from json? could have from and to dates o
 
 https://javascript.info/indexeddb
 
-- mailto thing for download put email addresses setting and use that if defined 
-  (if not defined, don't do email thing!)
+
+- create zip file javascript in browser?
+- would want to use on import too?
+https://stuk.github.io/jszip/
 
 - auto complete for supplier name and summary of work?
 
-    window.location.href = "mailto:jaynecrowe@hotmail.co.uk?subject=Book%20Keeping&cc=lee_crowe14@msn.com&body=Please%20attach%20the%20exported%20book%20keeping%20data!";
 
 - coudn't get range filtering working with .bound for dates.  Don't really understand why and have done it manually for now
 TRy agin?
