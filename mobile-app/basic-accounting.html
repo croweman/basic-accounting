@@ -1314,6 +1314,8 @@
 
                         state.bookEntries.forEach(function(bookEntry) {
                             bookEntry.when = new Date(bookEntry.when);
+                            delete bookEntry.customer;
+                            delete bookEntry.miles;
                             addBookEntry(bookEntry, function() { numberOfBookEntriesImported++; showProgressToUser(); });
                             numberOfBookEntries++;
                         })
