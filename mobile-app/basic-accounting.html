@@ -1237,36 +1237,37 @@
                                 expenses: expenses
                             };
 
-                            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-                            var dlAnchorElem = document.getElementById('downloadAnchorElem');
-                            dlAnchorElem.setAttribute("href", dataStr);
                             var name = getFormattedDate(new Date());
                             name = name.replace(' ', '_');
                             name = name.replace(':', '-');
                             name = name.replace(/\//g, '-');
-                            dlAnchorElem.setAttribute('download', 'book-entries-' + name + '.json');
+                            var fileName = 'book-entries-' + name + '.json';
+                            var zipFileName = 'book-entries-' + name + '.zip';
 
-                            if (settings.length === 0) {
-                                addSetting({ downloaded: new Date() }, function() {});
-                            } else {
-                                var setting = settings[0];
-                                setting.downloaded = new Date();
-                                updateSettingRecord(setting, function() { });
-                            }
+                            var zip = new JSZip();
+                            zip.file(fileName, JSON.stringify(data));
 
-                            dlAnchorElem.click();
+                            zip.generateAsync({type:"blob", compression: "DEFLATE"})
+                                .then(function(content) {
+                                    // see FileSaver.js
+                                    saveAs(content, zipFileName);
 
-                            if (setting.email.length > 0) {
-                                setTimeout(function() {
-                                    var url = 'mailto:' + setting.email + '?subject=Book%20Keeping&body=Please%20attach%20the%20exported%20book%20keeping%20data!';
-                                    
-                                    if (setting.emailcopy.length > 0) {
-                                        url += '&cc=' + setting.emailcopy;
+                                    var setting = settings[0];
+                                    setting.downloaded = new Date();
+                                    updateSettingRecord(setting, function() { });
+
+                                    if (setting.email.length > 0) {
+                                        setTimeout(function() {
+                                            var url = 'mailto:' + setting.email + '?subject=Book%20Keeping&body=Please%20attach%20the%20exported%20book%20keeping%20data from' + zipFileName;
+                                            
+                                            if (setting.emailcopy.length > 0) {
+                                                url += '&cc=' + setting.emailcopy;
+                                            }
+
+                                            window.location.href = url;
+                                        }, 2000);
                                     }
-
-                                    window.location.href = url;
-                                }, 2000);
-                            }
+                                });
                         });
                     }, true);
                 })
@@ -1288,77 +1289,82 @@
 
             var reader = new FileReader();
             reader.onload = function() {
+                JSZip.loadAsync(reader.result)
+                    .then(function(content) {
+                        var keys = Object.keys(content.files);
+                        return content.files[keys[0]].async('text');
+                    })
+                    .then(function (json) {
+                        $('#bookEntries').hide();
+                        var state = JSON.parse(json);
+                        updateProgress(2);
 
-                $('#bookEntries').hide();
-                var json = reader.result;
-                var state = JSON.parse(json);
-                updateProgress(2);
+                        var recordsToImport = (state.customers.length + state.bookEntries.length + state.expenses.length) + 2;
 
-                var recordsToImport = (state.customers.length + state.bookEntries.length + state.expenses.length) + 2;
+                        function showProgressToUser() {
+                            var recordsImported = (numberOfCustomersImported + numberOfBookEntriesImported + numberOfExpensesImported) + 2;
 
-                function showProgressToUser() {
-                    var recordsImported = (numberOfCustomersImported + numberOfBookEntriesImported + numberOfExpensesImported) + 2;
+                            var progressMade = parseInt(Math.floor((recordsImported / recordsToImport) * 100));
 
-                    var progressMade = parseInt(Math.floor((recordsImported / recordsToImport) * 100));
+                            if (progressMade < 2) {
+                                progressMade = 2;
+                            }
 
-                    if (progressMade < 2) {
-                        progressMade = 2;
-                    }
+                            if (progressMade > 99) {
+                                progressMade = 99;
+                            }
 
-                    if (progressMade > 99) {
-                        progressMade = 99;
-                    }
+                            updateProgress(progressMade);
+                        }
 
-                    updateProgress(progressMade);
-                }
+                        var customersTransaction = db.transaction("customer", "readwrite");
+                        var customersStore = customersTransaction.objectStore('customer');
+                        customersStore.clear();
 
-                var customersTransaction = db.transaction("customer", "readwrite");
-                var customersStore = customersTransaction.objectStore('customer');
-                customersStore.clear();
+                        var numberOfCustomers = 0;
+                        var numberOfCustomersImported = 0;
+                        var numberOfBookEntries = 0;
+                        var numberOfBookEntriesImported = 0;
+                        var numberOfExpenses = 0;
+                        var numberOfExpensesImported = 0;
 
-                var numberOfCustomers = 0;
-                var numberOfCustomersImported = 0;
-                var numberOfBookEntries = 0;
-                var numberOfBookEntriesImported = 0;
-                var numberOfExpenses = 0;
-                var numberOfExpensesImported = 0;
+                        state.customers.forEach(function(customer) {
+                            addCustomer(customer, function() { numberOfCustomersImported++; showProgressToUser(); });
+                            numberOfCustomers++;
+                        });
 
-                state.customers.forEach(function(customer) {
-                    addCustomer(customer, function() { numberOfCustomersImported++; showProgressToUser(); });
-                    numberOfCustomers++;
-                });
+                        var bookyEntryTransaction = db.transaction("bookEntry", "readwrite");
+                        var bookEntryStore = bookyEntryTransaction.objectStore('bookEntry');
+                        bookEntryStore.clear();
 
-                var bookyEntryTransaction = db.transaction("bookEntry", "readwrite");
-                var bookEntryStore = bookyEntryTransaction.objectStore('bookEntry');
-                bookEntryStore.clear();
+                        state.bookEntries.forEach(function(bookEntry) {
+                            bookEntry.when = new Date(bookEntry.when);
+                            addBookEntry(bookEntry, function() { numberOfBookEntriesImported++; showProgressToUser(); });
+                            numberOfBookEntries++;
+                        })
 
-                state.bookEntries.forEach(function(bookEntry) {
-                    bookEntry.when = new Date(bookEntry.when);
-                    addBookEntry(bookEntry, function() { numberOfBookEntriesImported++; showProgressToUser(); });
-                    numberOfBookEntries++;
-                })
+                        var expensesTransaction = db.transaction("expenses", "readwrite");
+                        var expensesStore = expensesTransaction.objectStore('expenses');
+                        expensesStore.clear();
 
-                var expensesTransaction = db.transaction("expenses", "readwrite");
-                var expensesStore = expensesTransaction.objectStore('expenses');
-                expensesStore.clear();
+                        state.expenses.forEach(function(expense) {
+                            expense.when = new Date(expense.when);
+                            addExpense(expense, function() { numberOfExpensesImported++; showProgressToUser(); });
+                            numberOfExpenses++;
+                        })
 
-                state.expenses.forEach(function(expense) {
-                    expense.when = new Date(expense.when);
-                    addExpense(expense, function() { numberOfExpensesImported++; showProgressToUser(); });
-                    numberOfExpenses++;
-                })
-
-                var interval = setInterval(() => {
-                    if (numberOfCustomersImported === numberOfCustomers && numberOfBookEntriesImported === numberOfBookEntries && numberOfExpensesImported === numberOfExpenses) {
-                        clearInterval(interval);
-                        $('#progress').hide();
-                        $("#importForm").get(0).reset();
-                        populateBookEntries();
-                    }
-                }, 100);
+                        var interval = setInterval(() => {
+                            if (numberOfCustomersImported === numberOfCustomers && numberOfBookEntriesImported === numberOfBookEntries && numberOfExpensesImported === numberOfExpenses) {
+                                clearInterval(interval);
+                                $('#progress').hide();
+                                $("#importForm").get(0).reset();
+                                populateBookEntries();
+                            }
+                        }, 100);
+                    });
             };
 
-            reader.readAsText(input.files[0]);
+            reader.readAsArrayBuffer(input.files[0]);
         };
 
         function initialiseSettings(callback) {
@@ -1644,15 +1650,13 @@
 
         <div id="tools" class="col-md-12">
             <button id="downloadButton" type="button" class="btn btn-default btn-primary">Export data</button>
-            <a id="downloadAnchorElem" style="display:none"></a>
-            <a id="mailtoAnchorElem" style="display:none"></a>
             <br /><br />
             <form id="importForm" name="importForm">
                 <strong>Import data:</strong>
                 <br />
                 <span>(will overwrite any existing data)</span>
                 <br />
-                <input type="file" id="import" name="import" class="btn btn-default" accept="application/json" onchange="openFile(event)">
+                <input type="file" id="import" name="import" class="btn btn-default" accept="application/zip" onchange="openFile(event)">
                 <div id="progress" class="progress">
                     <div class="progress-bar" role="progressbar" style="width: 1%;" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100">1%</div>
                 </div>
@@ -1959,6 +1963,8 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="bootstrap.min.js"></script>
     <script src="moment.min.js"></script>
+    <script src="jszip.min.js"></script>
+    <script src="FileSaver.js"></script>
     <script type="text/JavaScript">
     $(function() {
         initialise();

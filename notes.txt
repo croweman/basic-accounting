@@ -2,10 +2,11 @@ node tool to generate csv or something from json? could have from and to dates o
 
 https://javascript.info/indexeddb
 
-
-- create zip file javascript in browser?
-- would want to use on import too?
-https://stuk.github.io/jszip/
+version 3 migrate remove customer from bookEntry?
+then when loading customers have another object with ids a properties on an object which point to customer
+then can use when loading book entries
+remove all customer references???
+can remove miles too as on customer!
 
 - auto complete for supplier name and summary of work?
 
