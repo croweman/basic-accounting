@@ -912,7 +912,7 @@
             return day + '/' + month + '/' + year + ' ' + hour + ':' + minute;
         }
 
-        function getWhen(date) {
+        function getWhen(date, englishFormat) {
             var year = date.getFullYear();
 
             var month = (1 + date.getMonth()).toString();
@@ -921,6 +921,10 @@
             var day = date.getDate().toString();
             day = day.length > 1 ? day : '0' + day;
             
+            if (englishFormat) {
+                return day + '/' + month + '/' + year;
+            }
+
             return year + '-' + month + '-' + day;
         }
 
@@ -1534,7 +1538,7 @@
                     total += expense.amount;
                     totalMiles += expense.miles;
                     totalMilesCost += (expense.miles * costPerMile);
-                    html += '<tr><td><a href="javascript:editExpense(' + expense.id + ')">' + getWhen(expense.when) + '<a/></td><td>' + expense.supplier  + '</td><td>' + expense.summary + '</td><td>' + expense.amount.toFixed(2) + '</td><td>' + expense.miles.toFixed(2) + '</td><td><button type="button" class="btn btn-primary" onclick="deleteExpense(' + expense.id  + ')">Delete</button></td></tr>';
+                    html += '<tr><td><a href="javascript:editExpense(' + expense.id + ')">' + getWhen(expense.when, true) + '<a/></td><td>' + expense.supplier  + '</td><td>' + expense.summary + '</td><td>' + expense.amount.toFixed(2) + '</td><td>' + expense.miles.toFixed(2) + '</td><td><button type="button" class="btn btn-primary" onclick="deleteExpense(' + expense.id  + ')">Delete</button></td></tr>';
                 });
 
                 $('#totalExpenses').html(total.toFixed(2));

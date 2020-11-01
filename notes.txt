@@ -4,12 +4,6 @@ https://javascript.info/indexeddb
 
 // call javascript:migrateBookEntries() on jaynes phone.  Remove the code once done
 
-version 3 migrate remove customer from bookEntry?
-then when loading customers have another object with ids a properties on an object which point to customer
-then can use when loading book entries
-remove all customer references???
-can remove miles too as on customer!
-
 - auto complete for supplier name and summary of work???
 
 
