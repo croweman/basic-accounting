@@ -113,6 +113,7 @@
         var bookEntry;
         var customer;
         var allCustomers = [];
+        var allCustomersDictionary = {};
         var monthNames = ["January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
         ];
@@ -341,6 +342,9 @@
                 addCustomer(customer, function() {
                     getAllCustomers(function(custs) {
                         allCustomers = custs;
+
+                        buildCustomersDictionary(customers);
+
                         $('#customerDetails').hide();
                         scrollToTop();
                         customers();
@@ -410,33 +414,9 @@
 
                 updateCustomerRecord(customer, function() {
 
-                    getAllBookEntries(function(bookEntries) {
-                        var numberOfBookEntriesToUpdate = 0;
-                        var numberOfBookEntriesUpdated = 0;
-
-                        bookEntries.forEach(function(bookEntry) {
-                            if (bookEntry.customerId !== customer.id) return;
-                            
-                            bookEntry.customerId = customer.id;
-                            bookEntry.customer = customer.name + ', ' + customer.addressLine1 + ', ' + customer.town;
-                            bookEntry.miles = customer.miles;
-
-                            numberOfBookEntriesToUpdate++;
-
-                            updateBookEntryRecord(bookEntry, function() {
-                                numberOfBookEntriesUpdated++;
-                            });
-                        });
-                    
-                        var interval = setInterval(() => {
-                            if (numberOfBookEntriesUpdated === numberOfBookEntriesToUpdate) {
-                                clearInterval(interval);
-                                $('#customerDetails').hide();
-                                scrollToTop();
-                                customers();
-                            }
-                        }, 100);
-                    });
+                    $('#customerDetails').hide();
+                    scrollToTop();
+                    customers();
                 });
             });
         }
@@ -502,16 +482,11 @@
                     return;
                 }
 
-                if (miles === undefined || miles === null)
-                    miles = 0;
-
                 var bookEntry = {
-                    customer: customer,
                     customerId: parseInt(customerId),
                     when: new Date(when + 'T' + whenTime),
                     summary: summary,
                     amount: parseFloat(amount),
-                    miles: parseFloat(miles)
                 };
 
                 addBookEntry(bookEntry, function(e) {
@@ -523,8 +498,7 @@
             });
         }
 
-        function editBookEntry(id, milesVal) {
-            miles = milesVal;
+        function editBookEntry(id) {
             getBookEntryById(id, function(bookEntryInstance) {
                 bookEntry = bookEntryInstance;
                 $('#bookEntries').hide();
@@ -588,15 +562,10 @@
                     return;
                 }
 
-                if (miles === undefined || miles === null)
-                    miles = 0;
-
-                bookEntry.customer = customer;
                 bookEntry.customerId = parseInt(customerId);
                 bookEntry.when = new Date(when + 'T' + whenTime);
                 bookEntry.summary = summary;
                 bookEntry.amount = parseFloat(amount);
-                bookEntry.miles = parseFloat(miles);
 
                 updateBookEntryRecord(bookEntry, function() {
                     $('#bookEntry').hide();
@@ -1178,7 +1147,8 @@
                     var currentMilesCost = 0;
 
                     data[key].forEach(function(bookEntry) {
-                        var miles = bookEntry.miles;
+                        var bookEntryCustomer = allCustomersDictionary[bookEntry.customerId];
+                        var miles = bookEntryCustomer.miles;
 
                         if (miles === undefined || miles === null)
                             miles = 0;
@@ -1203,7 +1173,8 @@
                     html += '<table class="table"><thead><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Miles</th><th>Summary of work</th><th>Delete</th></tr></thead><tbody>';
 
                     data[key].forEach(function(bookEntry) {
-                        html += '<tr><td><a href="javascript:editBookEntry(' + bookEntry.id  + ', ' + bookEntry.miles + ')">' + getFormattedDate(bookEntry.when) + '</a></td><td>' + bookEntry.customer + '</td><td>£' + bookEntry.amount.toFixed(2) + '</td><td>' + bookEntry.miles.toFixed(2) + '</td><td>' + bookEntry.summary + '</td><td><button type="button" class="btn btn-default" onclick="deleteBookEntry(' + bookEntry.id  + ')">Delete</button></td></tr>';
+                        var bookEntryCustomer = allCustomersDictionary[bookEntry.customerId];
+                        html += '<tr><td><a href="javascript:editBookEntry(' + bookEntry.id + ')">' + getFormattedDate(bookEntry.when) + '</a></td><td>' + bookEntryCustomer.friendly + '</td><td>£' + bookEntry.amount.toFixed(2) + '</td><td>' + bookEntryCustomer.miles.toFixed(2) + '</td><td>' + bookEntry.summary + '</td><td><button type="button" class="btn btn-default" onclick="deleteBookEntry(' + bookEntry.id  + ')">Delete</button></td></tr>';
                     });
 
                     html += '</tbody></table></div>';
@@ -1487,10 +1458,19 @@
 
                     getAllCustomers(function(customers) {
                         allCustomers = customers;
+                        buildCustomersDictionary(customers);
                         promptForDownload();
                     });
                 });
             };
+        }
+        
+        function buildCustomersDictionary(customers) {
+            allCustomersDictionary = {};
+            customers.forEach(function(cust) {
+                cust.friendly = cust.name + ', ' + cust.addressLine1 + ', ' + cust.town;
+                allCustomersDictionary[cust.id] = cust;
+            });
         }
 
         function customers() {
@@ -1511,6 +1491,7 @@
 
             getAllCustomers(function(customers) {
                 allCustomers = customers;
+                buildCustomersDictionary(customers);
 
                 var html = '';
 
@@ -1602,6 +1583,22 @@
 
         function collapseDropDownMenu() {
             $('#dropDownMenu').removeClass('in');
+        }
+
+        function migrateBookEntries() {
+            getAllBookEntries(function(bookEntries) {
+                bookEntries.forEach(function(bookEntry) {
+                    if (bookEntry.customer) {
+                        delete bookEntry.customer;
+                    }
+
+                    if (bookEntry.miles) {
+                        delete bookEntry.miles;
+                    }
+
+                    updateBookEntryRecord(bookEntry, function() {});
+                });
+            }, true);
         }
         
     </script>
