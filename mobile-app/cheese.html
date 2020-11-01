@@ -1,0 +1,99 @@
+<html>
+    <head>
+
+        <script type="text/Javascript">
+            //var openRequest = indexedDB.open("idbpreso_date1",1);
+            var openRequest = indexedDB.open("BookKeeping",2);
+            var thisDb;
+            
+            openRequest.onupgradeneeded = function(e) {
+                console.log('her eup')
+                return;
+                thisDB = e.target.result;
+
+                if(!thisDB.objectStoreNames.contains("data")) {
+                    var os = thisDB.createObjectStore("data", {autoIncrement:true});
+                    os.createIndex("created", "created", {unique:false});
+                }
+            }
+
+            openRequest.onsuccess = function() {
+                console.log('here')
+                thisDB = openRequest.result;
+            }
+
+            openRequest.onerror = function(e) {
+                console.log('error', e);
+            }
+
+            function doSeed() {
+                var now = new Date();
+                
+                for(var i=0; i<10; i++) {
+                    var dayDiff = getRandomInt(1, 7);
+                    var thisDate = new Date();
+                    thisDate.setDate(now.getDate() + dayDiff);
+                    thisDB.transaction(["data"],"readwrite").objectStore("data").add({created:thisDate, text: ''});
+                }
+            }
+            
+            //Credit: Mozilla Developer Center
+            function getRandomInt (min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }   
+            
+            function doSearch() {
+                var fromDate = document.querySelector("#fromDate").value;
+                var toDate = document.querySelector("#toDate").value;
+
+                document.querySelector("#status").innerHTML = '';
+
+                var range;
+
+                if(fromDate == "" && toDate == "") return;
+
+                // var transaction = thisDB.transaction(["data"],"readonly");
+                // var store = transaction.objectStore("data");
+                // var index = store.index("created");
+                var transaction = thisDB.transaction(["bookEntry"],"readonly");
+                var store = transaction.objectStore("bookEntry");
+                var index = store.index("when");
+
+                if(fromDate != "") fromDate = new Date(fromDate);
+                if(toDate != "") toDate = new Date(toDate);
+                
+                if(fromDate != "" && toDate != "") {
+                    range = IDBKeyRange.bound(fromDate, toDate);
+                } else if(fromDate == "") {
+                    range = IDBKeyRange.upperBound(toDate);
+                } else {
+                    range = IDBKeyRange.lowerBound(fromDate);
+                }
+
+                var s = "";
+                index.openCursor(range, ['prev']).onsuccess = function(e) {
+                    var cursor = e.target.result;
+                    if(cursor) {
+                        s += "<h2>Key "+cursor.key+"</h2><p>";
+                        for(var field in cursor.value) {
+                            s+= field+"="+cursor.value[field]+"<br/>";
+                        }
+                        s+="</p>";
+                        cursor.continue();
+                    }
+                    document.querySelector("#status").innerHTML = s;
+                }
+
+            }
+        </script>
+    </head>
+    <body>
+        From: <input id="fromDate" type="text" value="01/01/2016" />
+        <br />
+        To: <input id="toDate" type="text" value="01/01/2021" />
+        <br />
+        <input type="button" value="search" onclick="javascript:doSearch(); return false;">
+        <br />
+        <div id="status"></div>
+    </body>
+</html>

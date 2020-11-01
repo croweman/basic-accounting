@@ -6,12 +6,6 @@ https://javascript.info/indexeddb
 
 - auto complete for supplier name and summary of work???
 
-
-
-
-- coudn't get range filtering working with .bound for dates.  Don't really understand why and have done it manually for now
-TRy agin?
-
 - refactor javascript etc (low), use async await blah blah if supported, re-use functions etc
 
 
