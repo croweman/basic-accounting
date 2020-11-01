@@ -343,7 +343,7 @@
                     getAllCustomers(function(custs) {
                         allCustomers = custs;
 
-                        buildCustomersDictionary(customers);
+                        buildCustomersDictionary(custs);
 
                         $('#customerDetails').hide();
                         scrollToTop();
@@ -1174,7 +1174,7 @@
 
                     data[key].forEach(function(bookEntry) {
                         var bookEntryCustomer = allCustomersDictionary[bookEntry.customerId];
-                        html += '<tr><td><a href="javascript:editBookEntry(' + bookEntry.id + ')">' + getFormattedDate(bookEntry.when) + '</a></td><td>' + bookEntryCustomer.friendly + '</td><td>£' + bookEntry.amount.toFixed(2) + '</td><td>' + bookEntryCustomer.miles.toFixed(2) + '</td><td>' + bookEntry.summary + '</td><td><button type="button" class="btn btn-default" onclick="deleteBookEntry(' + bookEntry.id  + ')">Delete</button></td></tr>';
+                        html += '<tr><td><a href="javascript:editBookEntry(' + bookEntry.id + ')">' + getFormattedDate(bookEntry.when) + '</a></td><td>' + bookEntryCustomer.friendly + '</td><td>£' + bookEntry.amount.toFixed(2) + '</td><td>' + bookEntryCustomer.miles.toFixed(2) + '</td><td>' + bookEntry.summary + '</td><td><button type="button" class="btn btn-primary" onclick="deleteBookEntry(' + bookEntry.id  + ')">Delete</button></td></tr>';
                     });
 
                     html += '</tbody></table></div>';
@@ -1534,7 +1534,7 @@
                     total += expense.amount;
                     totalMiles += expense.miles;
                     totalMilesCost += (expense.miles * costPerMile);
-                    html += '<tr><td><a href="javascript:editExpense(' + expense.id + ')">' + getWhen(expense.when) + '<a/></td><td>' + expense.supplier  + '</td><td>' + expense.summary + '</td><td>' + expense.amount.toFixed(2) + '</td><td>' + expense.miles.toFixed(2) + '</td><td><button type="button" class="btn btn-default" onclick="deleteExpense(' + expense.id  + ')">Delete</button></td></tr>';
+                    html += '<tr><td><a href="javascript:editExpense(' + expense.id + ')">' + getWhen(expense.when) + '<a/></td><td>' + expense.supplier  + '</td><td>' + expense.summary + '</td><td>' + expense.amount.toFixed(2) + '</td><td>' + expense.miles.toFixed(2) + '</td><td><button type="button" class="btn btn-primary" onclick="deleteExpense(' + expense.id  + ')">Delete</button></td></tr>';
                 });
 
                 $('#totalExpenses').html(total.toFixed(2));
