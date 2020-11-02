@@ -2,11 +2,5 @@ node tool to generate csv or something from json? could have from and to dates o
 
 https://javascript.info/indexeddb
 
-// call javascript:migrateBookEntries() on jaynes phone.  Remove the code once done
-
 - auto complete for supplier name and summary of work???
-
-- refactor javascript etc (low), use async await blah blah if supported, re-use functions etc
-
-
 
